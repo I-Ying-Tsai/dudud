@@ -3,8 +3,8 @@ from typing import Optional
 from google import genai
 from google.genai import types
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception
-from config import config
-from core.schemas import AcademicIR
+from academic_decompiler.config import config
+from academic_decompiler.core.schemas import AcademicIR
 
 def is_api_overload_error(exception) -> bool:
     err_str = str(exception)
@@ -34,7 +34,11 @@ class MiddleEndSynthesizer:
         2. Main Block Interface: MUST include `if __name__ == '__main__':` execution boundary.
         3. Symbolic & Mathematical Integrity: Distinguish closely related symbols (e.g., 'alpha' vs 'a'). Maintain exact structural symmetries.
         
-        4. Generalized JIT Mock Data Generation Rule:
+        4. Python 3.12+ Syntax Compliance (CRITICAL):
+           If your function docstrings, comments, or string literals contain ANY mathematical backslashes or LaTeX expressions (e.g., \\h, \\hat, \\sigma, \\l, \\s), you MUST prefix that string or docstring literal with 'r' to render it as a Raw String (e.g., r\"\"\"docstring\"\"\"). 
+           Failing to do so triggers an invalid escape sequence SyntaxWarning during AST compilation. Fix this deterministically.
+
+        5. Generalized JIT Mock Data Generation Rule:
            When synthesizing the mock arrays inside the test block, you MUST dynamically inspect the `constraints` payload of each tensor declaration from the IR metadata:
            - If `domain_type` == "probability_simplex" or `sum_to_one` == true:
              Do NOT generate independent unconstrained random arrays. You must generate raw logits first, then apply an explicit normalization operation (e.g., dividing by the sum along the active axis or a custom softmax) to guarantee that the instantiated mock tensor perfectly obeys mathematical axioms (elements within [0,1], summing to 1.0).
@@ -43,13 +47,13 @@ class MiddleEndSynthesizer:
            - If `domain_type` == "bounded_0_1":
              Bind elements inside the strict real interval via np.random.uniform(0, 1).
 
-        5. Mandatory JIT Test Suite Specification:
+        6. Mandatory JIT Test Suite Specification:
            Your test block MUST explicitly evaluate and assert the following adversarial operational conditions:
            - TENSOR CONCATENATION & COMPRESSION: Verify that concatenated representations (e.g., [3H]) are correctly projected back to [H] via linear transformations before element-wise additions.
            - DYNAMIC BOUNDARY & EXTREME SEQUENCE DEPTH: Instantiate tests for deep sequence/propagation parameters (e.g., depth=5) AND extreme shallow configurations (e.g., depth=1). Ensure no IndexOutOfBounds or null reduction errors occur in temporal loops or loss functions.
            - BROADCAST IMMUNITY: Ensure numeric dimension scaling correctly utilizes NumPy broadcasting without distorting batch or hidden tensor layouts.
-        6. Assertions: Explicitly use `assert` to validate matrix shapes, numerical bounds matching target constraints, and total numerical stability (no NaN/Inf).
-        7. Output Formatting: Pure executable Python string ONLY. NO Markdown wrappers (like ```python).
+        7. Assertions: Explicitly use `assert` to validate matrix shapes, numerical bounds matching target constraints, and total numerical stability (no NaN/Inf).
+        8. Output Formatting: Pure executable Python string ONLY. NO Markdown wrappers (like ```python).
         """
         
         contents = [base_prompt]
