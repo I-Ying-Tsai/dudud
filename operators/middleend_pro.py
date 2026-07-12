@@ -30,18 +30,26 @@ class MiddleEndSynthesizer:
         {ir_context}
 
         Rigid Requirements:
-        1. Dependency Restriction: ONLY use 'numpy' and 'math'. No external frameworks (e.g., torch, scipy) are allowed.
+        1. Dependency Restriction: ONLY use 'numpy' and 'math'. No external deep learning frameworks are allowed.
         2. Main Block Interface: MUST include `if __name__ == '__main__':` execution boundary.
-        3. Symbolic & Mathematical Integrity: 
-           - Distinguish closely related symbols (e.g., 'alpha' vs 'a'). 
-           - Maintain mathematical symmetry: if the paper defines symmetric parallel updates (e.g., Support and Denial branches), do NOT introduce hallucinated asymmetric coefficients (like an extraneous beta) into one branch.
-        4. Mandatory JIT Test Suite Specification:
+        3. Symbolic & Mathematical Integrity: Distinguish closely related symbols (e.g., 'alpha' vs 'a'). Maintain exact structural symmetries.
+        
+        4. Generalized JIT Mock Data Generation Rule:
+           When synthesizing the mock arrays inside the test block, you MUST dynamically inspect the `constraints` payload of each tensor declaration from the IR metadata:
+           - If `domain_type` == "probability_simplex" or `sum_to_one` == true:
+             Do NOT generate independent unconstrained random arrays. You must generate raw logits first, then apply an explicit normalization operation (e.g., dividing by the sum along the active axis or a custom softmax) to guarantee that the instantiated mock tensor perfectly obeys mathematical axioms (elements within [0,1], summing to 1.0).
+           - If `domain_type` == "strictly_positive":
+             Use np.random.uniform or positive offsets with a lower boundary > 0 to safeguard the kernel against domain errors (e.g., division-by-zero or negative logarithms).
+           - If `domain_type` == "bounded_0_1":
+             Bind elements inside the strict real interval via np.random.uniform(0, 1).
+
+        5. Mandatory JIT Test Suite Specification:
            Your test block MUST explicitly evaluate and assert the following adversarial operational conditions:
            - TENSOR CONCATENATION & COMPRESSION: Verify that concatenated representations (e.g., [3H]) are correctly projected back to [H] via linear transformations before element-wise additions.
-           - DYNAMIC BOUNDARY & EXTREME TREE DEPTH: Instantiate tests for deep trees (e.g., T=5) AND extreme shallow trees (e.g., T=1). Ensure no IndexOutOfBounds or null reduction errors occur in temporal loops or KL loss summations.
-           - BROADCAST IMMUNITY: Ensure node-count scaling (e.g., b_u * u_hat) correctly utilizes NumPy broadcasting without distorting batch or hidden tensor profiles.
-        5. Assertions: Explicitly use `assert` to validate matrix shapes and numerical stability (no NaN/Inf).
-        6. Output Formatting: Pure executable Python string ONLY. NO Markdown wrappers (like ```python).
+           - DYNAMIC BOUNDARY & EXTREME SEQUENCE DEPTH: Instantiate tests for deep sequence/propagation parameters (e.g., depth=5) AND extreme shallow configurations (e.g., depth=1). Ensure no IndexOutOfBounds or null reduction errors occur in temporal loops or loss functions.
+           - BROADCAST IMMUNITY: Ensure numeric dimension scaling correctly utilizes NumPy broadcasting without distorting batch or hidden tensor layouts.
+        6. Assertions: Explicitly use `assert` to validate matrix shapes, numerical bounds matching target constraints, and total numerical stability (no NaN/Inf).
+        7. Output Formatting: Pure executable Python string ONLY. NO Markdown wrappers (like ```python).
         """
         
         contents = [base_prompt]
@@ -68,7 +76,6 @@ class MiddleEndSynthesizer:
             )
         )
         
-        # 穩定清洗 Markdown 標籤
         code = response.text.strip()
         if code.startswith("```python"):
             code = code.split("```python")[1].split("```")[0].strip()

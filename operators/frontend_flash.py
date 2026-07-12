@@ -24,6 +24,16 @@ class FrontendAnalyzer:
         You must isolate the fundamental algebraic operators and fully serialize the tokens, 
         semantic descriptions, and free-text mathematical shape configurations of all input and output tensors.
         Ensure complete mapping of the algorithmic flow and strictly follow the attached JSON schema.
+
+        CRITICAL - MATHEMATICAL DOMAIN & VALUE CONSTRAINT PROPAGATION:
+        You must actively conduct semantic analysis on the text surrounding each variable or formula.
+        - If the paper text implies or states that a variable/tensor represents a probability vector, density distribution, fraction, or allocation weights that must normalize, you MUST set `constraints.domain_type` to "probability_simplex" and `constraints.sum_to_one` to true.
+        - If a variable is strictly required to be non-negative or non-zero due to operational singularities (e.g., inside logs, square roots, or divisions), explicitly assign `domain_type` as "strictly_positive".
+        - If a parameter is a scaling coefficient bounded within a real interval (e.g., between 0 and 1), set `domain_type` to "bounded_0_1".
+        - For standard unconstrained hidden neural representations, set `domain_type` to "general".
+
+        MATHEMATICAL SYMMETRY GUARD:
+        When capturing sequential state transition systems, check algebraic symmetry. Do not introduce hallucinated asymmetric coefficients or variables that break the structural harmony outlined in the paper.
         """
         
         response = client.models.generate_content(
