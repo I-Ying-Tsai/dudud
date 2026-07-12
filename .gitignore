@@ -1,0 +1,10 @@
+# Volatile Runtime Sandbox Files
+_sandbox_*.py
+
+# Python Environment & Cache
+.venv/
+__pycache__/
+*.pyc
+
+# Local Environment Variables
+.env
