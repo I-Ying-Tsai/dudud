@@ -9,7 +9,7 @@ class DecompilerConfig(BaseSettings):
     frontend_model: str = "gemini-2.5-flash"
     middleend_model: str = "gemini-2.5-flash"
     backend_model: str = "gemini-2.5-flash"
-    analyzer_model: str = "gemini-2.5-pro"
+    analyzer_model: str = "gemini-2.5-flash"
 
     # Runtime Sandbox Hard Constraints
     sandbox_timeout_seconds: int = 5

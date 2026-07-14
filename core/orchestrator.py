@@ -8,6 +8,8 @@ from sandbox.runtime import SandboxRuntime
 from operators.frontend_flash import FrontendAnalyzer
 from operators.middleend_pro import MiddleEndSynthesizer
 from exporters.code_exporter import CodeExporter
+from exporters.formula_pdf import FormulaPDFExporter
+from exporters.parameter_pdf import ParameterPDFExporter
 
 class AcademicDecompilerOrchestrator:
     def __init__(self):
@@ -105,15 +107,20 @@ class AcademicDecompilerOrchestrator:
     def _execute_exporters(self, ir_data: AcademicIR, verified_code: str):
         print(" ├─ [Step Flow] Sandboxing cleared. Deploying Parallel Exporter Pipeline...")
         
-        # 1. 導出實體 MVI 程式碼
         try:
             mvi_path = CodeExporter.export_mvi(ir_data, verified_code)
             print(f" │  ├── [Artifact 1] MVI Source Code saved to: {mvi_path}")
         except Exception as e:
             print(f" │  ├── [Error] Failed to export MVI code: {e}")
             
-        # 2. 導出公式依賴與流向 PDF (待實作)
-        print(" │  ├── [Artifact 2] Dataflow Topology PDF (Pending...)")
+        try:
+            topo_pdf_path = FormulaPDFExporter.export_topology(self.client, ir_data, verified_code)
+            print(f" │  ├── [Artifact 2] Dataflow Topology PDF saved to: {topo_pdf_path}")
+        except Exception as e:
+            print(f" │  ├── [Error] Failed to compile Dataflow Topology: {e}")
         
-        # 3. 導出參數詞彙規格書 PDF (待實作)
-        print(" │  └── [Artifact 3] Parameter Specification PDF (Pending...)")
+        try:
+            spec_pdf_path = ParameterPDFExporter.export_specifications(self.client, ir_data, verified_code)
+            print(f" │  └── [Artifact 3] Parameter Specification PDF saved to: {spec_pdf_path}")
+        except Exception as e:
+            print(f" │  └── [Error] Failed to compile Parameter Specification: {e}")

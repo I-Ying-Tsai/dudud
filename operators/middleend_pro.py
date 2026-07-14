@@ -3,8 +3,8 @@ from typing import Optional
 from google import genai
 from google.genai import types
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception
-from academic_decompiler.config import config
-from academic_decompiler.core.schemas import AcademicIR
+from config import config
+from core.schemas import AcademicIR
 
 def is_api_overload_error(exception) -> bool:
     err_str = str(exception)
